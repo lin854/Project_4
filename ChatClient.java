@@ -87,6 +87,7 @@ final class ChatClient {
             if(args.length>2)
                 serverAddress = args[2];
         }
+
         // Create your client and start it
         ChatClient client = new ChatClient(serverAddress, portNumber, username);
         client.start();
@@ -97,12 +98,14 @@ final class ChatClient {
             String message = sc.nextLine();
             int type = 0;
             if(message.toLowerCase().equals("/logout")) {
-                x = false;
-                client.close();
                 type = 1;
             }
             ChatMessage msg = new ChatMessage(type, message);
             client.sendMessage(msg);
+            if(type == 1){
+                x=false;
+                client.close();
+            }
         }while(x);
     }
 
@@ -115,12 +118,12 @@ final class ChatClient {
     private final class ListenFromServer implements Runnable {
         public void run() {
             try {
-                while(true) {
-                    String msg = (String) sInput.readObject();
-                    System.out.print(msg);
+                while(!socket.isClosed()) {
+                        String msg = (String) sInput.readObject();
+                        System.out.print(msg);
                 }
             } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
+                close();
             }
         }
     }
