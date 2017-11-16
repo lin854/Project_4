@@ -37,10 +37,13 @@ final class ChatServer {
     private synchronized void broadcast(String message){
         for(int i = 0; i<clients.size(); i++){
             ClientThread cli = clients.get(i);
-            cli
+            cli.writeMessage(message);
         }
     }
 
+    private synchronized void remove(int id){
+        clients.remove(id);
+    }
     /*
      *  > java ChatServer
      *  > java ChatServer portNumber
