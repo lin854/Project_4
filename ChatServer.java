@@ -3,7 +3,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 final class ChatServer {
@@ -35,6 +37,10 @@ final class ChatServer {
         }
     }
     private synchronized void broadcast(String message){
+        Date date = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+        String datetoStr = formatter.format(date);
+        message = datetoStr+": "+message;
         for(int i = 0; i<clients.size(); i++){
             ClientThread cli = clients.get(i);
             cli.writeMessage(message);
@@ -53,10 +59,9 @@ final class ChatServer {
         int portNumber = 1500;
         if(args.length>0)
             portNumber=Integer.parseInt(args[0]);
-        ChatServer server = new ChatServer(1500);
+        ChatServer server = new ChatServer(portNumber);
         server.start();
     }
-
 
     /*
      * This is a private class inside of the ChatServer
@@ -81,7 +86,11 @@ final class ChatServer {
                 e.printStackTrace();
             }
         }
-
+        private void close() throws IOException{
+            socket.close();
+            sOutput.close();
+            sInput.close();
+        }
         /*
          * This is what the client thread actually runs.
          */
@@ -93,15 +102,19 @@ final class ChatServer {
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
-            System.out.println(username + ": Ping");
-
-
-            // Send message back to the client
-            try {
-                sOutput.writeObject("Pong");
-            } catch (IOException e) {
-                e.printStackTrace();
+            System.out.println(username + ": "+cm.getMessage());
+            if(cm.getType()==1){
+                remove(id);
             }
+            else {
+                // Send message back to the client
+                try {
+                    sOutput.writeObject("Pong");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            broadcast(cm.getMessage());
         }
         private boolean writeMessage(String msg){
             try {

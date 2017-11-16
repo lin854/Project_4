@@ -91,17 +91,17 @@ final class ChatClient {
         ChatClient client = new ChatClient(serverAddress, portNumber, username);
         client.start();
         boolean x = true;
+        Scanner sc = new Scanner(System.in);
         do {
-            Scanner sc = new Scanner(System.in);
+            System.out.print("Message: ");
             String message = sc.nextLine();
-            ChatMessage msg = null;
             int type = 0;
             if(message.toLowerCase().equals("/logout")) {
                 x = false;
-                client.closeAll();
+                client.close();
                 type = 1;
             }
-            msg = new ChatMessage(type, message);
+            ChatMessage msg = new ChatMessage(type, message);
             client.sendMessage(msg);
         }while(x);
     }
@@ -124,7 +124,7 @@ final class ChatClient {
             }
         }
     }
-    private boolean closeAll(){
+    private boolean close(){
         try {
             sInput.close();
             sOutput.close();
