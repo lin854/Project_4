@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -26,7 +27,10 @@ final class ChatClient {
         // Create a socket
         try {
             socket = new Socket(server, port);
-        } catch (IOException e) {
+        } catch(ConnectException e){
+            System.out.println("Server not found.");
+            return false;
+        }catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -34,7 +38,8 @@ final class ChatClient {
         try {
             sInput = new ObjectInputStream(socket.getInputStream());
             sOutput = new ObjectOutputStream(socket.getOutputStream());
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -90,10 +95,9 @@ final class ChatClient {
 
         // Create your client and start it
         ChatClient client = new ChatClient(serverAddress, portNumber, username);
-        client.start();
-        boolean x = true;
+        boolean x = client.start();
         Scanner sc = new Scanner(System.in);
-        do {
+        while(x) {
             System.out.print("> ");
             String message = sc.nextLine();
             int type = 0;
@@ -109,6 +113,8 @@ final class ChatClient {
                 if(user.equals(username)||user.equals("")) {
                     user = "";
                     type = 0;
+                    System.out.println("When you try to message yourself, you will message to the whole " +
+                            "server like normal");
                 }
             }
             ChatMessage msg = new ChatMessage(type, message, user);
@@ -117,7 +123,7 @@ final class ChatClient {
                 x=false;
                 client.close();
             }
-        }while(x);
+        }
     }
 
     /*
