@@ -13,7 +13,7 @@ final class ChatServer {
     private final List<ClientThread> clients = new ArrayList<>();
     private final int port;
     private static String fileAddress;
-
+    private static int randomNumber =0;
     private ChatServer(int port) {
         this.port = port;
     }
@@ -103,6 +103,12 @@ final class ChatServer {
                 sOutput = new ObjectOutputStream(socket.getOutputStream());
                 sInput = new ObjectInputStream(socket.getInputStream());
                 username = (String) sInput.readObject();
+                for(int i =0; i < clients.size(); i++) {
+                    if (username.equals(clients.get(i).username)){
+                        username = "randomUsername" + randomNumber;
+                        randomNumber++;
+                    }
+                }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
