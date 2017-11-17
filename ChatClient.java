@@ -109,6 +109,8 @@ final class ChatClient {
                 if(user.equals(username)||user.equals("")) {
                     user = "";
                     type = 0;
+                    System.out.println("When you try to message yourself, you will message to the whole " +
+                            "server like normal");
                 }
             }
             ChatMessage msg = new ChatMessage(type, message, user);
