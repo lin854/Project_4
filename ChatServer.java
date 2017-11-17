@@ -12,7 +12,7 @@ final class ChatServer {
     private static int uniqueId = 0;
     private final List<ClientThread> clients = new ArrayList<>();
     private final int port;
-
+    private static String fileAddress;
 
     private ChatServer(int port) {
         this.port = port;
@@ -75,8 +75,11 @@ final class ChatServer {
      */
     public static void main(String[] args) {
         int portNumber = 1500;
-        if(args.length>0)
-            portNumber=Integer.parseInt(args[0]);
+        if(args.length>0) {
+            portNumber = Integer.parseInt(args[0]);
+            if(args.length > 1)
+                fileAddress = args[1];
+        }
         ChatServer server = new ChatServer(portNumber);
         server.start();
     }
@@ -115,10 +118,11 @@ final class ChatServer {
         @Override
         public void run() {
             // Read the username sent to you by client
-            System.out.println(getDate()+ " "+ username+" just connected.");
+           broadcast(username+" just connected.");
             boolean x = true;
             while(x) {
                 try {
+                    ChatFilter chatFilter = new ChatFilter(fileAddress);
                     cm = (ChatMessage) sInput.readObject();
                     if (cm.getType() == 1) {
                         x = false;
@@ -127,12 +131,20 @@ final class ChatServer {
                                     "message.");
                             remove(id);
                         }
+                    }else if (cm.getMessage().toLowerCase().equals("/list")){
+                        writeMessage("Other online clients: ");
+                        for(int i =0; i < clients.size(); i++) {
+                            if(!clients.get(i).username.equals(username)) {
+                                writeMessage(clients.get(i).username + " ");
+                            }
+                        }
                     }
                     else if(cm.getType() == 0){
-                        broadcast(username+": "+cm.getMessage());
+                        broadcast(username+": "+chatFilter.filter(cm.getMessage()));
                     }
                     else if(cm.getType() == 2){
-                        directMessage(username+"->"+cm.getRecipient()+": "+cm.getMessage(), cm.getRecipient());
+                        directMessage(username+"->"+cm.getRecipient()+": "+chatFilter.filter(cm.getMessage()), cm.getRecipient());
+                        writeMessage(username+"->"+cm.getRecipient()+": "+chatFilter.filter(cm.getMessage()));
                     }
                 } catch (IOException | ClassNotFoundException e) {
                     if(clients.size()>=id+1) {
