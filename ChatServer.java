@@ -44,7 +44,22 @@ final class ChatServer {
         }
         System.out.println(message);
     }
-    public String getDate(){
+    private synchronized void directMessage(String message, String username){
+        message = getDate()+" "+message;
+        boolean found = false;
+        for(int i = 0; i<clients.size(); i++){
+            ClientThread cli = clients.get(i);
+            if(cli.username.equals(username)) {
+                found = true;
+                cli.writeMessage(message);
+            }
+        }
+        if(found)
+            System.out.println(message);
+        else
+            System.out.println("Person not found.");
+    }
+    private String getDate(){
         Date date = new Date();
         SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
         return formatter.format(date);
@@ -113,12 +128,18 @@ final class ChatServer {
                             remove(id);
                         }
                     }
-                    else{
-                        //sOutput.writeObject(cm.getMessage());
+                    else if(cm.getType() == 0){
                         broadcast(username+": "+cm.getMessage());
                     }
+                    else if(cm.getType() == 2){
+                        directMessage(username+"->"+cm.getRecipient()+": "+cm.getMessage(), cm.getRecipient());
+                    }
                 } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
+                    if(clients.size()>=id+1) {
+                        broadcast(username+" has disconnected.");
+                        remove(id);
+                    }
+                    x = false;
                 }
             }
         }

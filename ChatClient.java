@@ -97,10 +97,21 @@ final class ChatClient {
             System.out.print("> ");
             String message = sc.nextLine();
             int type = 0;
+            String user = "";
             if(message.toLowerCase().equals("/logout")) {
                 type = 1;
             }
-            ChatMessage msg = new ChatMessage(type, message, "");
+            else if(message.startsWith("/msg ")){
+                message = message.replaceFirst("/msg ", "");
+                user = message.substring(0, message.indexOf(" "));
+                message = message.substring(message.indexOf(" ")+1);
+                type = 2;
+                if(user.equals(username)||user.equals("")) {
+                    user = "";
+                    type = 0;
+                }
+            }
+            ChatMessage msg = new ChatMessage(type, message, user);
             client.sendMessage(msg);
             if(type == 1){
                 x=false;
@@ -108,7 +119,6 @@ final class ChatClient {
             }
         }while(x);
     }
-
 
     /*
      * This is a private class inside of the ChatClient
