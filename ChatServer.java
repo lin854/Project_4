@@ -37,14 +37,17 @@ final class ChatServer {
         }
     }
     private synchronized void broadcast(String message){
-        Date date = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-        String datetoStr = formatter.format(date);
-        message = datetoStr+": "+message;
+        message = getDate()+" "+message;
         for(int i = 0; i<clients.size(); i++){
             ClientThread cli = clients.get(i);
             cli.writeMessage(message);
         }
+        System.out.println(message);
+    }
+    public String getDate(){
+        Date date = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+        return formatter.format(date);
     }
 
     private synchronized void remove(int id){
@@ -87,9 +90,9 @@ final class ChatServer {
             }
         }
         private void close() throws IOException{
-            socket.close();
-            sOutput.close();
             sInput.close();
+            sOutput.close();
+            socket.close();
         }
         /*
          * This is what the client thread actually runs.
@@ -97,24 +100,27 @@ final class ChatServer {
         @Override
         public void run() {
             // Read the username sent to you by client
-            try {
-                cm = (ChatMessage) sInput.readObject();
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-            System.out.println(username + ": "+cm.getMessage());
-            if(cm.getType()==1){
-                remove(id);
-            }
-            else {
-                // Send message back to the client
+            System.out.println(getDate()+ " "+ username+" just connected.");
+            boolean x = true;
+            while(x) {
                 try {
-                    sOutput.writeObject("Pong");
-                } catch (IOException e) {
+                    cm = (ChatMessage) sInput.readObject();
+                    if (cm.getType() == 1) {
+                        x = false;
+                        if(clients.size()>=id+1) {
+                            broadcast(clients.get(id).username+" disconnected with a LOGOUT " +
+                                    "message.");
+                            remove(id);
+                        }
+                    }
+                    else{
+                        //sOutput.writeObject(cm.getMessage());
+                        broadcast(username+": "+cm.getMessage());
+                    }
+                } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
             }
-            broadcast(cm.getMessage());
         }
         private boolean writeMessage(String msg){
             try {
@@ -123,7 +129,7 @@ final class ChatServer {
             catch(IOException e){
                 return false;
             }
-            return socket.isConnected();
+            return !socket.isConnected();
         }
     }
 
